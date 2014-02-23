@@ -25,7 +25,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 
 		return array(
 			'title' => 'Process Email to Page',
-			'version' => 101,
+			'version' => 102,
 			'summary' => 'A module that converts emails and attachments to pages and images.',
 			'author' => 'Peter Burlingham',
 			'href' => '',
@@ -46,6 +46,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 			'emailType' => 'POP3',
 			'emailHost' => 'localhost',
 			'emailPort' => '',
+			'forceSecure' => '',
 			'publishDefault' => '',
 			'emailAddress' => '',
 			'emailCategory' => '',
@@ -90,7 +91,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					'label'=>"Password",
 					'desc'=>"Password for email addresses",
 					'type'=>"_createInputfieldText",
-					'width'=>22,
+					'width'=>20,
 					'options'=>'',
 					'notes'=>''),
 			'emailType' => array(
@@ -104,15 +105,22 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					'label'=>"Host",
 					'desc'=>"Usually localhost",
 					'type'=>"_createInputfieldText",
-					'width'=>22,
+					'width'=>20,
 					'options'=>'',
 					'notes'=>''),
 			'emailPort' => array(
 					'label'=>"Port Number",
 					'desc'=>"Leave blank to auto-detect",
 					'type'=>"_createInputfieldText",
-					'width'=>22,
+					'width'=>13,
 					'options'=>'',
+					'notes'=>''),
+			'forceSecure' => array(
+					'label'=>"Force Secure",
+					'desc'=>"Required for some hosts",
+					'type'=>"_createInputfieldSelect",
+					'options'=>array('TRUE','FALSE'),
+					'width'=>13,
 					'notes'=>''),
 			'publishDefault' => array(
 					'label'=>"Publish by default?",
@@ -282,7 +290,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 
 				// Connect to the mailbox using the settings in the module's config
 				$this->emailType = empty($this->emailType) ? 'pop3' : strtolower($this->emailType);
-				$mailbox = new fMailbox($this->emailType, $this->emailHost, $category->emailAddress, $this->emailPassword, $this->emailPort);
+				$mailbox = new fMailbox($this->emailType, $this->emailHost, $category->emailAddress, $this->emailPassword, $this->emailPort?$this->emailPort:NULL, $this->forceSecure);
 
 				// Fetch the header information from all of the emails found in the inbox
 				$messages = $mailbox->listMessages();
@@ -291,14 +299,15 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					$message = $mailbox->fetchMessage($message['uid']);
 
 					// Remove whitespace and empty tags that creep through from some mail clients (naming no names!)
-					$message['html'] = str_replace('&nbsp;', '', $message['html']);
-					$message['html'] = preg_replace('%<(\w+)[^>]*></\1>%', '', $message['html']);
+					$message_body = $message['html'] != '' ? $message['html'] : nl2br($message['text']);
+					$message_body = str_replace('&nbsp;', '', $message_body);
+					$message_body = preg_replace('%<(\w+)[^>]*></\1>%', '', $message_body);
 
 					// Run it through ProcessWire's sanitizer for good measure - restricts only to basic HTML tags
-					$message['html'] = $this->sanitizer->textarea($message['html'], array('allowableTags' => '<br><br /><p><strong><b><a>'));
+					$message_body = $this->sanitizer->textarea($message_body, array('allowableTags' => '<br><br /><p><strong><b><a>'));
 
 					// Ensure the body is derived from the start of the email to the first delimiter
-					$body = explode('==', $message['html']);
+					$body = explode('==', $message_body);
 					$body = trim($body[0]);
 
 					// Set up a new page in the specified part of the tree using the specified template
@@ -317,7 +326,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					// Find delimiters and split on them (made it difficult for myself by not having ==opening== and ==/closing== tags but hey!)
 					foreach ($this->delimiterField as $delimiter) {
 						$delimiter = wire('fields')->get($delimiter);
-						$delimitercontent = explode('==' . $delimiter->name . '==', $message['html']);
+						$delimitercontent = explode('==' . $delimiter->name . '==', $message_body);
 						$delimitercontent = explode('==', $delimitercontent[1]);
 						$delimitercontent = $delimitercontent[0];
 						$page->{$delimiter->name} = $delimitercontent;
