@@ -3,11 +3,11 @@
 /**
  *
  * Demonstrates the Module interface and how to add hooks.
- * 
- * ProcessWire 2.x 
- * Copyright (C) 2010 by Ryan Cramer 
+ *
+ * ProcessWire 2.x
+ * Copyright (C) 2010 by Ryan Cramer
  * Licensed under GNU/GPL v2, see LICENSE.TXT
- * 
+ *
  * http://www.processwire.com
  * http://www.ryancramer.com
  *
@@ -24,16 +24,16 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 	public static function getModuleInfo() {
 
 		return array(
-			'title' => 'Process Email to Page', 
-			'version' => 100, 
+			'title' => 'Process Email to Page',
+			'version' => 101,
 			'summary' => 'A module that converts emails and attachments to pages and images.',
 			'author' => 'Peter Burlingham',
 			'href' => '',
-			'singular' => true, 
-			'autoload' => true 
+			'singular' => true,
+			'autoload' => true
 			);
 	}
-	
+
 	/**
 	 * Default configuration for module
 	 *
@@ -75,7 +75,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 		// the $data provided to this function will be empty. Or, if you add new config items in a new version,
 		// $data won't have it until they configure it. Best bet is to merge defaults with custom, where
 		// custom overwrites the defaults (array_merge).
-		
+
 		$data = array_merge(self::getDefaultData(), $data);
 
 		// Populate the $fieldsModel with data for each checkbox
@@ -83,38 +83,51 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 			'moduleHash' => array(
 					'label' => "Module Hash",
 					'desc' => "Use the following unique URL to run the module via a CRON job: " . wire('pages')->get('/')->httpUrl . "?hash=",
-					'type' => "_createInputfieldText"),
+					'type' => "_createInputfieldText",
+					'options'=>'',
+					'notes'=>''),
 			'emailPassword' => array(
 					'label'=>"Password",
 					'desc'=>"Password for email addresses",
 					'type'=>"_createInputfieldText",
-					'width'=>22),
+					'width'=>22,
+					'options'=>'',
+					'notes'=>''),
 			'emailType' => array(
 					'label'=>"Type",
 					'desc'=>"Usually POP3",
 					'type'=>"_createInputfieldSelect",
 					'options'=>array('POP3','IMAP'),
+					'notes'=>'',
 					'width'=>14),
 			'emailHost' => array(
 					'label'=>"Host",
 					'desc'=>"Usually localhost",
 					'type'=>"_createInputfieldText",
-					'width'=>22),
+					'width'=>22,
+					'options'=>'',
+					'notes'=>''),
 			'emailPort' => array(
 					'label'=>"Port Number",
 					'desc'=>"Leave blank to auto-detect",
 					'type'=>"_createInputfieldText",
-					'width'=>22),
+					'width'=>22,
+					'options'=>'',
+					'notes'=>''),
 			'publishDefault' => array(
 					'label'=>"Publish by default?",
 					'desc'=>"Tick to auto-approve",
 					'type'=>"_createCheckbox",
-					'width'=>20),
+					'width'=>20,
+					'options'=>'',
+					'notes'=>''),
 			'emailAddress' => array(
 					'label'=>"Email Address",
 					'desc'=>"An email address to scan for this category",
 					'type'=>"_createInputfieldText",
 					'width'=>33,
+					'options'=>'',
+					'notes'=>'',
 					'fieldset'=>'emailCategories',
 					'fieldsetname'=>'Email Categories',
 					'fieldsetdescription'=>'Add rows of email addresses and the parent pages they will post to below.'),
@@ -123,22 +136,30 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					'desc'=>"The category that emails will be posted to",
 					'type'=>"_createInputfieldPageListSelect",
 					'width'=>34,
+					'options'=>'',
+					'notes'=>'',
 					'fieldset'=>'emailCategories'),
 			'emailTemplate' => array(
 					'label'=>"Template",
 					'desc'=>"The template that will be used when posting",
 					'type'=>"_createInputfieldPageListSelect",
 					'width'=>33,
+					'options'=>'',
+					'notes'=>'',
 					'fieldset'=>'emailCategories'),
 			'categoryData' => array(
 					'label'=>"Category Data",
 					'desc'=>"JSON string of the category data",
-					'type'=>"_createInputfieldHidden"),
+					'type'=>"_createInputfieldHidden",
+					'options'=>'',
+					'notes'=>''),
 			'delimiterField' => array(
 					'label'=>"Delimiters",
 					'desc'=>"The category that emails will be posted to",
 					'type'=>"_createInputfieldASMSelect",
 					'width'=>50,
+					'options'=>'',
+					'notes'=>'',
 					'fieldset'=>'delimiters',
 					'fieldsetname'=>'Delimiters',
 					'fieldsetdescription'=>"Delimiters are used to split email contents on field names. For example, if an email's body contains: \n\nsome text\n==sidebar==\nmore text\n\nthen everything after ==sidebar== will be added to a field called 'sidebar'. Everything up to the first delimiter will be added to the body field."),
@@ -147,36 +168,38 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					'desc'=>"The delimiters as they should be used",
 					'type'=>"_createInputfieldTextArea",
 					'width'=>50,
+					'options'=>'',
+					'notes'=>'',
 					'fieldset'=>'delimiters')
 		);
 		// Now use $data and $fieldsModel loop to create all fields
 		$fieldset = '';
-				
+
 		foreach ($fieldsModel as $f=>$fM){
 			$fM['width'] = isset($fM['width']) ? $fM['width'] : 100;
 			if (isset($fM['fieldset'])) {
 				if ($fM['fieldset'] != $fieldset) {
 					$fieldset = $fM['fieldset'];
-					${$set.$fM['fieldset']} = wire('modules')->get("InputfieldFieldset");
-					${$set.$fM['fieldset']}->label = $fM['fieldsetname'];
-					${$set.$fM['fieldset']}->description = $fM['fieldsetdescription'];
-					${$set.$fM['fieldset']}->id = str_replace(' ', '', $fM['fieldsetname']);
-					${$set.$fM['fieldset']}->set('collapsed', Inputfield::collapsedNo);
+					${$fM['fieldset']} = wire('modules')->get("InputfieldFieldset");
+					${$fM['fieldset']}->label = $fM['fieldsetname'];
+					${$fM['fieldset']}->description = $fM['fieldsetdescription'];
+					${$fM['fieldset']}->id = str_replace(' ', '', $fM['fieldsetname']);
+					${$fM['fieldset']}->set('collapsed', Inputfield::collapsedNo);
 				}
 				// For my Jquery to work I want all emailcategories in a wrapper of their own, so skip adding the field here
 				if ($fM['fieldset'] != 'emailCategories') {
-					${$set.$fM['fieldset']}->add(
+					${$fM['fieldset']}->add(
 						self::$fM['type']($f, $fM['label'], $data[$f], $fM['desc'], $fM['options'], $fM['notes'], $fM['width'])
 					);
 				}
-				$fields->add(${$set.$fM['fieldset']});
+				$fields->add(${$fM['fieldset']});
 			} else {
 				$fields->add(
 					self::$fM['type']($f, $fM['label'], $data[$f], $fM['desc'], $fM['options'], $fM['notes'], $fM['width'])
 				);
 			}
 		}
-		
+
 		$data['emailCategories'] = !empty($data['categoryData']) ? json_decode($data['categoryData'], true) : array(0 => array('emailAddress' => '', 'emailCategory' => '', 'emailTemplate' => ''));
 		// If we have more categories stored then load extra rows
 		if (!empty($data['emailCategories'])) {
@@ -197,9 +220,9 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 	 * Initialize the module
 	 */
 	public function init() {
-		
+
 		// Check for AJAX request and process as appropriate
-		if($this->config->ajax) { 
+		if($this->config->ajax) {
 			if ($this->input->get->addCategory) {
 				$this->addCategory($this->input->get->addCategory);
 			}
@@ -207,17 +230,17 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 				$this->saveCategories($this->input->get->saveCategories);
 			}*/
 		}
-		
+
 		// Hook before page render
-		$this->addHookBefore('Page::render', $this, 'importFromEmail'); 
-		
+		$this->addHookBefore('Page::render', $this, 'importFromEmail');
+
 		// Load jQuery Core if not a post request
 		if(!$this->isPost) $this->modules->get('JqueryCore');
-		
+
 		// Initialize the module
 		parent::init();
 	}
-	
+
 	public function addCategory($id) {
 		$fields = new InputfieldWrapper();
 		$fields->add($this->_createInputfieldText('emailAddress', 'Email Address #' . ($id+1), '', 'An email address to scan for this category', '', '', 33));
@@ -226,7 +249,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 		echo $fields->render();
 		exit;
 	}
-	
+
 	/*
 	// Now defunct as we don't try to save via AJAX any more.
 	public function saveCategories($json) {
@@ -236,7 +259,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 		exit;
 	}
 	*/
-	
+
 	public function importFromEmail() {
 		// Check we have a hash in the URL that matches the module's hash which was generated during installation (so people don't randomly stumble upon the URL or have it run on every page load)
 		if (wire('input')->get('hash') && wire('input')->get('hash') == $this->moduleHash) {
@@ -250,34 +273,34 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 				}
 			}
 			spl_autoload_register( 'flourish_loader', true );
-			
+
 			// categoryData is a json string that we need to turn into an object (I now love json by the way - never used it before but it's awesome)
 			$categories = json_decode($this->categoryData);
-			
+
 			// Iterate through each of the email categories
 			foreach ($categories as $category) {
-				
+
 				// Connect to the mailbox using the settings in the module's config
 				$this->emailType = empty($this->emailType) ? 'pop3' : strtolower($this->emailType);
 				$mailbox = new fMailbox($this->emailType, $this->emailHost, $category->emailAddress, $this->emailPassword, $this->emailPort);
-				
+
 				// Fetch the header information from all of the emails found in the inbox
 				$messages = $mailbox->listMessages();
 
 				foreach ($messages as $message) {
 					$message = $mailbox->fetchMessage($message['uid']);
-					
+
 					// Remove whitespace and empty tags that creep through from some mail clients (naming no names!)
 					$message['html'] = str_replace('&nbsp;', '', $message['html']);
 					$message['html'] = preg_replace('%<(\w+)[^>]*></\1>%', '', $message['html']);
-					
+
 					// Run it through ProcessWire's sanitizer for good measure - restricts only to basic HTML tags
 					$message['html'] = $this->sanitizer->textarea($message['html'], array('allowableTags' => '<br><br /><p><strong><b><a>'));
 
 					// Ensure the body is derived from the start of the email to the first delimiter
 					$body = explode('==', $message['html']);
 					$body = trim($body[0]);
-					
+
 					// Set up a new page in the specified part of the tree using the specified template
 					$page = new Page();
 					$page->setOutputFormatting(false);
@@ -285,12 +308,12 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					$page->parent = $this->pages->get($category->emailCategory);
 					$page->title = $message['headers']['subject'];
 					$page->body = $body;
-					
+
 					// If we've selected to NOT publish pages by default then hide them
 					if (!$this->publishDefault) {
 						$page->addStatus(Page::statusUnpublished);
 					}
-					
+
 					// Find delimiters and split on them (made it difficult for myself by not having ==opening== and ==/closing== tags but hey!)
 					foreach ($this->delimiterField as $delimiter) {
 						$delimiter = wire('fields')->get($delimiter);
@@ -299,10 +322,10 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 						$delimitercontent = $delimitercontent[0];
 						$page->{$delimiter->name} = $delimitercontent;
 					}
-					
+
 					// Save the page so we can add attachments to it
 					$page->save();
-					
+
 					// Iterate through any attachments if we have an images field for this page
 					if (isset($message['attachment'])) {
 						foreach ($message['attachment'] as $attachment) {
@@ -315,15 +338,15 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 						$page->save();
 					}
 				}
-				
+
 				// Finally, delete any messages from the current mailbox
 				$mailbox->deleteMessages(array_keys($messages));
 			}
 		}
 	}
-	
+
 	private static function _createInputfieldText($ipName, $ipTitle, $ipValue='', $ipDesc='', $ipOptions='', $ipNotes='', $ipWidth){
-		$field =  wire('modules')->get("InputfieldText"); 
+		$field =  wire('modules')->get("InputfieldText");
 		$field->name = $ipName;
 		$field->label = $ipTitle;
 		$field->required = false;
@@ -333,9 +356,9 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 		$field->columnWidth = $ipWidth;
 		return $field;
 	}
-	
+
 	private static function _createInputfieldTextarea($ipName, $ipTitle, $ipValue='', $ipDesc='', $ipOptions='', $ipNotes='', $ipWidth){
-		$field =  wire('modules')->get("InputfieldTextarea"); 
+		$field =  wire('modules')->get("InputfieldTextarea");
 		$field->name = $ipName;
 		$field->label = $ipTitle;
 		$field->required = false;
@@ -345,7 +368,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 		$field->columnWidth = $ipWidth;
 		return $field;
 	}
-	
+
 	private static function _createInputfieldHidden($tName, $tTitle, $tValue, $tDesc='', $ipOptions=''){
 		$field = wire('modules')->get("InputfieldHidden");
 		$field->name = $tName;
@@ -354,9 +377,9 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 		$field->attr('value', $tValue);
 		return $field;
 	}
-	
+
 	private static function _createInputfieldSelect($ipName, $ipTitle, $ipValue='', $ipDesc='', $ipOptions='', $ipNotes='', $ipWidth){
-		$field =  wire('modules')->get("InputfieldSelect"); 
+		$field =  wire('modules')->get("InputfieldSelect");
 		$field->name = $ipName;
 		$field->label = $ipTitle;
 		$field->required = false;
@@ -376,40 +399,40 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 		$field->columnWidth = $ipWidth;
 		return $field;
 	}
-	
+
 	private static function _createInputfieldPageListSelect($ipName, $ipTitle, $ipValue='', $ipDesc='', $ipOptions='', $ipNotes='', $ipWidth=100, $ipID=1){
-		$field =  wire('modules')->get("InputfieldPageListSelect"); 
+		$field =  wire('modules')->get("InputfieldPageListSelect");
 		$field->name = $ipName;
 		$field->label = $ipTitle;
 		$field->required = false;
 		$field->description = $ipDesc;
 		$field->attr('value', $ipValue);
 		$field->attr('id', $ipName . $ipID); // Allows us to add more of these with different IDs via AJAX
-		$field->set('unselectLabel', 'Unselect'); 
+		$field->set('unselectLabel', 'Unselect');
 		$field->columnWidth = $ipWidth;
 		if($ipValue == 0) $field->collapsed = Inputfield::collapsedNo;
 		$field->columnWidth = $ipWidth;
 		return $field;
 	}
-	
+
 	private static function _createInputfieldASMSelect($aName, $aTitle, $aValue, $aDesc='', $aOptions='', $aNotes='', $aWidth=100) {
-		if(!isset($aValue) || !is_array($aValue)) $aValue = ''; 
+		if(!isset($aValue) || !is_array($aValue)) $aValue = '';
 		$modules = Wire::getFuel('modules');
 		$field = $modules->get("InputfieldAsmSelect");
 		$field->attr('name', $aName);
 		foreach(wire('fields') as $currfield) {
 			// Just for this module, we only want fields that are text, textarea, TinyMCE or CKEditor and also NOT the title field (this is determined from the email subject)
 			if (($currfield->name != 'title' && $currfield->name != 'body') && ($currfield->type == 'FieldtypeText' || $currfield->type == 'FieldtypeTextarea')) {
-				$field->addOption($currfield->id, $currfield->name); 
+				$field->addOption($currfield->id, $currfield->name);
 			}
 		}
-		$field->attr('value', $aValue); 
+		$field->attr('value', $aValue);
 		$field->label = $aTitle;
 		$field->description = $aDesc;
 		$field->columnWidth = $aWidth;
 		return $field;
 	}
-	
+
 	private static function _createCheckbox($chName, $chTitle, $chChecked=true, $chDesc='', $chOptions = '', $chNotes = '', $chWidth=100){
 		$field = wire('modules')->get("InputfieldCheckbox");
 		$field->name = $chName;
@@ -420,8 +443,8 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 		$field->columnWidth = $chWidth;
 		return $field;
 	}
-	
-	public function ___install() {		
+
+	public function ___install() {
 		// We need to create a random hash for the cron job - the current user's name plus install time seems sufficient
 		$data = array(
 		   'moduleHash' => sha1(wire('user')->name . time())
