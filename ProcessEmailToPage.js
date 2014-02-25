@@ -1,40 +1,59 @@
 $(document).ready(function() {
 	// Add an "Add category" button to the Email Categories container
-	$('#EmailCategories .ui-widget-content:first').append('<button class="ui-button ui-state-default" id="addCategory" style="display: block; clear: left;">Add another category</button>');
+	$('#EmailCategories').after('<br /><button class="ui-button ui-state-default" id="addCategory" style="display: block; clear: left;">Add another category</button><br />');
+
+	$('#EmailCategories .InputfieldWrapper').each(function() {
+		$(this).prepend('<label style="cursor:move;" class="ui-widget ui-widget-header InputfieldItemHeader" for="">&nbsp;<span class="ui-icon ui-icon-trash InputfieldRepeaterTrash deleterow" style="display: block;float:right;cursor:pointer;">Delete</span></label>');
+		$(this).css("margin-top", "20px");
+	});
+
 	// Handle what happens on click of our new button
-	$('#addCategory').live('click', function(e) {
+	var addCategory = function(e) {
 		e.preventDefault();
 		$(this).toggleClass('ui-state-active');
+		var options = { sortable: false };
+		var newCategory = $('<li class="Inputfield InputfieldWrapper InputfieldColumnWidthFirst" style="margin-top:20px;">').load('?addCategory=' + ($('#EmailCategories ul.Inputfields ul.Inputfields').length), function() {
+			$(newCategory).prepend('<label class="ui-widget ui-widget-header InputfieldItemHeader" for="">&nbsp;<span class="ui-icon ui-icon-trash InputfieldRepeaterTrash deleterow" style="display: block;float:right;cursor:pointer;">Delete</span></label>');
+ 			$(newCategory).find(".InputfieldAsmSelect select[multiple=multiple]").asmSelect(options);
+		});
+		$('.Inputfields').not('.ui-helper-clearfix').append(newCategory);
 
-		$(this).prev('ul:first').append($('<div>').load('?addCategory=' + ($('#EmailCategories ul.Inputfields ul.Inputfields').length)));
-		
-	});
-	
+	};
+
+    if ($.isFunction($(document).on)) {
+		$(document).on('click', '#addCategory', addCategory);
+    }
+    else {
+		$('#addCategory').live('click', addCategory);
+    }
+
+	// Handle click of the delete button
+	var deleteRow = function(e){
+		e.preventDefault();
+		$(this).toggleClass('ui-state-active');
+		$(this).parent().parent().remove();
+	}
+
+    if ($.isFunction($(document).on)) {
+	    $(document).on('click', '.deleterow', deleteRow);
+    } else {
+		$('.deleterow').live('click', deleterow);
+	}
+
+
 	// Adds the number to each row of category fields
 	$('#EmailCategories ul.Inputfields ul.Inputfields').each(function(i) {
 		$(this).find('li label').each(function() {
 			$(this).html($(this).html() + ' #' + (i+1));
 		});
 	});
-	
+
 	// Hide the module hash and append it to the URL in the description
 	$('#Inputfield_moduleHash').prop('type', 'hidden');
 	$('#wrap_Inputfield_moduleHash p.description').append($('#Inputfield_moduleHash').val());
-		
-	// Append a delete button to the end of every category row - removed for now as unstable
-	/*var deleteButton = '<li><button class="ui-button ui-state-default deleterow">Delete</button></li>';
-	$("#EmailCategories ul.Inputfields ul.Inputfields").append(deleteButton);
-	// Handle click of the delete button
-	$('.deleterow').live('click', function(e) {
-		e.preventDefault();
-		$(this).toggleClass('ui-state-active');
 
-		$(this).parent().parent().css('display', 'none');
-		
-	});	*/
-	
 	// Takes over from normal submit to store our categories in an array and then submit as normal
-	$('#Inputfield_submit').click(function(e) {
+	$('#Inputfield_submit_save_module, #Inputfield_submit').click(function(e) {
 		if ($('#EmailCategories').length) {
 			// A variable to store the CSV data in
 			var data = new Array();
@@ -53,7 +72,7 @@ $(document).ready(function() {
 			} else {
 				$('#Inputfield_categoryData').val('');
 			}
-			
+
 			// Abandoned as if I preventDefault and submit via ajax then no other values get saved :( Left for future perusal
 			/*$.ajax({
 				url:'?saveCategories=' + stringJSON,
@@ -64,10 +83,10 @@ $(document).ready(function() {
 			});*/
 		}
 	});
-	
+
 	// Ensure the delimiter preview holds any currently saved fields
 	updateDelimiterPreview();
-	
+
 	// Updates the delimiter preview box when the select is updated
 	$('#Inputfield_delimiterField').change(function(e) {
 		updateDelimiterPreview();
