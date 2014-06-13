@@ -30,7 +30,8 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 			'author' => 'Peter Burlingham',
 			'href' => '',
 			'singular' => true,
-			'autoload' => true
+			'autoload' => true,
+            'icon'     => 'envelope-o'
 			);
 	}
 
