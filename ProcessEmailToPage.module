@@ -25,13 +25,12 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 
 		return array(
 			'title' => 'Process Email to Page',
-			'version' => 102,
+			'version' => 109,
 			'summary' => 'A module that converts emails and attachments to pages and images.',
 			'author' => 'Peter Burlingham',
 			'href' => '',
 			'singular' => true,
-			'autoload' => true,
-            'icon'     => 'envelope-o'
+			'autoload' => true
 			);
 	}
 
@@ -49,9 +48,12 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 			'emailPort' => '',
 			'forceSecure' => '',
 			'publishDefault' => '',
+			'embedImages' => 'FALSE',
 			'emailAddress' => '',
 			'emailCategory' => '',
 			'emailTemplate' => '',
+			'bodyField' => '',
+			'imagesField' => '',
 			'categoryData' => '',
 			'delimiterField' => '',
 			'delimiterPreview' => ''
@@ -92,7 +94,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					'label'=>"Password",
 					'desc'=>"Password for email addresses",
 					'type'=>"_createInputfieldText",
-					'width'=>20,
+					'width'=>15,
 					'options'=>'',
 					'notes'=>''),
 			'emailType' => array(
@@ -106,7 +108,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					'label'=>"Host",
 					'desc'=>"Usually localhost",
 					'type'=>"_createInputfieldText",
-					'width'=>20,
+					'width'=>15,
 					'options'=>'',
 					'notes'=>''),
 			'emailPort' => array(
@@ -123,6 +125,13 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					'options'=>array('TRUE','FALSE'),
 					'width'=>13,
 					'notes'=>''),
+			'embedImages' => array(
+					'label'=>"Embed Images",
+					'desc'=>"Include embedded images in body field",
+					'type'=>"_createInputfieldSelect",
+					'options'=>array('TRUE','FALSE'),
+					'width'=>10,
+					'notes'=>''),
 			'publishDefault' => array(
 					'label'=>"Publish by default?",
 					'desc'=>"Tick to auto-approve",
@@ -134,7 +143,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					'label'=>"Email Address",
 					'desc'=>"An email address to scan for this category",
 					'type'=>"_createInputfieldText",
-					'width'=>33,
+					'width'=>20,
 					'options'=>'',
 					'notes'=>'',
 					'fieldset'=>'emailCategories',
@@ -144,7 +153,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					'label'=>"Category",
 					'desc'=>"The category that emails will be posted to",
 					'type'=>"_createInputfieldPageListSelect",
-					'width'=>34,
+					'width'=>20,
 					'options'=>'',
 					'notes'=>'',
 					'fieldset'=>'emailCategories'),
@@ -152,7 +161,23 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					'label'=>"Template",
 					'desc'=>"The template that will be used when posting",
 					'type'=>"_createInputfieldPageListSelect",
-					'width'=>33,
+					'width'=>20,
+					'options'=>'',
+					'notes'=>'',
+					'fieldset'=>'emailCategories'),
+			'bodyField' => array(
+					'label'=>"Body Field",
+					'desc'=>"The textarea field used to show the content from the email",
+					'type'=>"_createInputfieldSelect",
+					'width'=>20,
+					'options'=>'',
+					'notes'=>'',
+					'fieldset'=>'emailCategories'),
+			'imagesField' => array(
+					'label'=>"Images Field",
+					'desc'=>"The images field that will be used to store images from the email",
+					'type'=>"_createInputfieldSelect",
+					'width'=>20,
 					'options'=>'',
 					'notes'=>'',
 					'fieldset'=>'emailCategories'),
@@ -209,14 +234,16 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 			}
 		}
 
-		$data['emailCategories'] = !empty($data['categoryData']) ? json_decode($data['categoryData'], true) : array(0 => array('emailAddress' => '', 'emailCategory' => '', 'emailTemplate' => ''));
+		$data['emailCategories'] = !empty($data['categoryData']) ? json_decode($data['categoryData'], true) : array(0 => array('emailAddress' => '', 'emailCategory' => '', 'emailTemplate' => '', 'bodyField' => '', 'imagesField' => ''));
 		// If we have more categories stored then load extra rows
 		if (!empty($data['emailCategories'])) {
 			foreach ($data['emailCategories'] as $k => $category) {
 				$catwrapper = new InputfieldWrapper();
-				$catwrapper->add(self::_createInputfieldText('emailAddress', 'Email Address', $category['emailAddress'], $fieldsModel['emailAddress']['desc'], '', '', 33));
-				$catwrapper->add(self::_createInputfieldPageListSelect('emailCategory', 'Category', $category['emailCategory'], $fieldsModel['emailCategory']['desc'], '', '', 34, $k));
-				$catwrapper->add(self::_createInputfieldSelect('emailTemplate', 'Template', $category['emailTemplate'], $fieldsModel['emailTemplate']['desc'], '', '', 33, $k));
+				$catwrapper->add(self::_createInputfieldText('emailAddress', 'Email Address', $category['emailAddress'], $fieldsModel['emailAddress']['desc'], '', '', 20));
+				$catwrapper->add(self::_createInputfieldPageListSelect('emailCategory', 'Category', $category['emailCategory'], $fieldsModel['emailCategory']['desc'], '', '', 20, $k));
+				$catwrapper->add(self::_createInputfieldSelect('emailTemplate', 'Template', $category['emailTemplate'], $fieldsModel['emailTemplate']['desc'], '', '', 20, $k));
+				$catwrapper->add(self::_createInputfieldSelect('bodyField', 'Body Field', $category['bodyField'], $fieldsModel['bodyField']['desc'], '', '', 20, $k));
+				$catwrapper->add(self::_createInputfieldSelect('imagesField', 'Images Field', $category['imagesField'], $fieldsModel['imagesField']['desc'], '', '', 20, $k));
 				$emailCategories->add($catwrapper);
 			}
 		} else {
@@ -252,9 +279,11 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 
 	public function addCategory($id) {
 		$fields = new InputfieldWrapper();
-		$fields->add($this->_createInputfieldText('emailAddress', 'Email Address #' . ($id+1), '', 'An email address to scan for this category', '', '', 33));
-		$fields->add($this->_createInputfieldPageListSelect('emailCategory', 'Category #' . ($id+1), '', 'The category that emails will be posted to', '', '', 34, $id));
-		$fields->add($this->_createInputfieldSelect('emailTemplate', 'Template #' . ($id+1), '', 'The template that will be used when posting', '', '', 33, $id));
+		$fields->add($this->_createInputfieldText('emailAddress', 'Email Address #' . ($id+1), '', 'An email address to scan for this category', '', '', 20));
+		$fields->add($this->_createInputfieldPageListSelect('emailCategory', 'Category #' . ($id+1), '', 'The category that emails will be posted to', '', '', 20, $id));
+		$fields->add($this->_createInputfieldSelect('emailTemplate', 'Template #' . ($id+1), '', 'The template that will be used when posting', '', '', 20, $id));
+		$fields->add($this->_createInputfieldSelect('bodyField', 'Body Field #' . ($id+1), '', 'The textarea field used to show the content from the email', '', '', 20, $id));
+		$fields->add($this->_createInputfieldSelect('imagesField', 'Images Field #' . ($id+1), '', 'The images field that will be used to store images from the email', '', '', 20, $id));
 		echo $fields->render();
 		exit;
 	}
@@ -300,12 +329,18 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					$message = $mailbox->fetchMessage($message['uid']);
 
 					// Remove whitespace and empty tags that creep through from some mail clients (naming no names!)
-					$message_body = $message['html'] != '' ? $message['html'] : nl2br($message['text']);
+					if(isset($message['text'])) $message_body = nl2br($message['text']);
+					if(isset($message['html'])) $message_body = $message['html'];
 					$message_body = str_replace('&nbsp;', '', $message_body);
 					$message_body = preg_replace('%<(\w+)[^>]*></\1>%', '', $message_body);
 
 					// Run it through ProcessWire's sanitizer for good measure - restricts only to basic HTML tags
-					$message_body = $this->sanitizer->textarea($message_body, array('allowableTags' => '<br><br /><p><strong><b><a>'));
+					if($this->embedImages == 'TRUE' && $category->imagesField != ''){
+						$message_body = $this->sanitizer->textarea($message_body, array('allowableTags' => '<br><br /><p><strong><b><a><img>'));
+					}
+					else{
+						$message_body = $this->sanitizer->textarea($message_body, array('allowableTags' => '<br><br /><p><strong><b><a>'));
+					}
 
 					// Ensure the body is derived from the start of the email to the first delimiter
 					$body = explode('==', $message_body);
@@ -317,7 +352,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					$page->template = $category->emailTemplate;
 					$page->parent = $this->pages->get($category->emailCategory);
 					$page->title = $message['headers']['subject'];
-					$page->body = $body;
+					$page->{$category->bodyField} = $body;
 
 					// If we've selected to NOT publish pages by default then hide them
 					if (!$this->publishDefault) {
@@ -337,16 +372,69 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					$page->save();
 
 					// Iterate through any attachments if we have an images field for this page
-					if (isset($message['attachment'])) {
+					if (isset($message['attachment']) && $category->imagesField != '') {
 						foreach ($message['attachment'] as $attachment) {
 							// We need to make the filename safe before continuing
 							$attachment['filename'] = $this->sanitizer->pageName($attachment['filename'], true);
 							// Write the file directly to the /files/pageid/ folder, then add it to ProcessWire (adds info to the DB)
-							file_put_contents($page->images->path . $attachment['filename'], $attachment['data']);
-							$page->images->add($page->images->path . $attachment['filename']);
+							if(strlen($attachment['data'])>0){
+								file_put_contents($page->{$category->imagesField}->path . $attachment['filename'], $attachment['data']);
+								$page->{$category->imagesField}->add($page->{$category->imagesField}->path . $attachment['filename']);
+							}
 						}
 						$page->save();
 					}
+
+					// Iterate through any inline attachments if we have an images field for this page
+					if (isset($message['inline']) && $category->imagesField != '') {
+						foreach ($message['inline'] as $attachment) {
+							// We need to make the filename safe before continuing
+							$attachment['filename'] = $this->sanitizer->pageName($attachment['filename'], true);
+							// Write the file directly to the /files/pageid/ folder, then add it to ProcessWire (adds info to the DB)
+							if(strlen($attachment['data'])>0){
+								file_put_contents($page->{$category->imagesField}->path . $attachment['filename'], $attachment['data']);
+								$page->{$category->imagesField}->add($page->{$category->imagesField}->path . $attachment['filename']);
+							}
+						}
+						$page->save();
+					}
+
+					// Iterate through any embedded images if we have an images field for this page
+					if (isset($message['related']) && $category->imagesField != '') {
+						//error_log(print_r($message['related'], true));
+						$n=1;
+						foreach ($message['related'] as $attachment) {
+							//error_log(print_r($attachment,true));
+							//wire('log')->message('CID:'.key($message['related']));
+							// We need to make the filename safe before continuing
+							$filename = $this->sanitizer->pageName($message['headers']['subject'], true) . '-' . $n . '.' . substr($attachment['mimetype'], -3);
+							// Write the file directly to the /files/pageid/ folder, then add it to ProcessWire (adds info to the DB)
+							if(strlen($attachment['data'])>0){
+								file_put_contents($page->{$category->imagesField}->path . $filename, $attachment['data']);
+								$page->{$category->imagesField}->add($page->{$category->imagesField}->path . $filename);
+							}
+							//this didn't work for more than one image due to CID issue and the way flourish only gets one per email message
+							//ended up with domdocument approach - below
+							//$page->{$category->bodyField} = str_replace(key($message['related']), $page->{$category->imagesField}->url . $filename, $page->{$category->bodyField});
+							$n++;
+						}
+						$page->save();
+
+						if($this->embedImages == 'TRUE' && $category->imagesField != ''){
+							$dom = new DOMDocument();
+							$dom->loadHTML($page->{$category->bodyField});
+							$i=1;
+							foreach ($dom->getElementsByTagName('img') as $img) {
+						        $src = $page->{$category->imagesField}->url . $this->sanitizer->pageName($message['headers']['subject'], true) . '-' . $i . '.' . substr($attachment['mimetype'], -3);
+							    $img->setAttribute( 'src' , $src );
+							    $i++;
+							}
+							$page->{$category->bodyField} = $dom->saveHTML();
+							$page->save($category->bodyField);
+						}
+
+					}
+
 				}
 
 				// Finally, delete any messages from the current mailbox
@@ -359,7 +447,8 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 		$field =  wire('modules')->get("InputfieldText");
 		$field->name = $ipName;
 		$field->label = $ipTitle;
-		$field->required = false;
+		if($ipName == 'emailAddress' || $ipName == 'emailHost') $field->required = true;
+		else $field->required = false;
 		$field->description = $ipDesc;
 		$field->attr('value', $ipValue);
 		$field->attr('notes', $ipNotes);
@@ -392,14 +481,27 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 		$field =  wire('modules')->get("InputfieldSelect");
 		$field->name = $ipName;
 		$field->label = $ipTitle;
-		$field->required = false;
 		$field->description = $ipDesc;
-		if ($ipName == 'emailTemplate') {
+		if($ipName == 'imagesField'){
+			$field->required = false;
+			foreach(wire('fields') as $currfield) {
+				if($currfield->type instanceof FieldtypeImage) $field->addOption($currfield->name, $currfield->name);
+			}
+		}
+		elseif($ipName == 'bodyField'){
+			$field->required = true;
+			foreach(wire('fields') as $currfield) {
+				if($currfield->type instanceof FieldtypeTextarea) $field->addOption($currfield->name, $currfield->name);
+			}
+		}
+		elseif ($ipName == 'emailTemplate') {
+			$field->required = true;
 			foreach (wire('templates') as $template) {
 				$field->addOption($template->id, $template->name);
 			}
 		} else {
 			if (is_array($ipOptions)) {
+			$field->required = true;
 				foreach ($ipOptions as $option) {
 					$field->addOption($option, $option);
 				}
@@ -414,7 +516,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 		$field =  wire('modules')->get("InputfieldPageListSelect");
 		$field->name = $ipName;
 		$field->label = $ipTitle;
-		$field->required = false;
+		$field->required = true;
 		$field->description = $ipDesc;
 		$field->attr('value', $ipValue);
 		$field->attr('id', $ipName . $ipID); // Allows us to add more of these with different IDs via AJAX

@@ -65,6 +65,8 @@ $(document).ready(function() {
 					data[i]['emailAddress'] = $(this).find('input[name=emailAddress]').val();
 					data[i]['emailCategory'] = $(this).find('input[name=emailCategory]').val();
 					data[i]['emailTemplate'] = $(this).find('select[name=emailTemplate]').val();
+					data[i]['bodyField'] = $(this).find('select[name=bodyField]').val();
+					data[i]['imagesField'] = $(this).find('select[name=imagesField]').val();
 				}
 			});
 			if (getObjectSize(data) > 0) {

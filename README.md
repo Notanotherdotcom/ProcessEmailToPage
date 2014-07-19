@@ -12,7 +12,7 @@ For each category, you can now enter an email address, category (page parent) an
 
 Next, you can optionally set up delimiters to split the email's content into different text fields - useful if you want part of your email to be in the body area and some in the sidebar for example. This part is fairly self-explanatory in the config screen.
 
-Final note - the module will attempt to add attachments to an images field, so make sure you still have that default field!
+The module will add attachments to an images field, and optionally embed images into the text body to match the email layout.
 
 There are more things that need to be added - more checks for attachment types and a whitelist - but for now it should be functional and fun to use!
 
