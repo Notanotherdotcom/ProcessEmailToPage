@@ -66,6 +66,8 @@ $(document).ready(function() {
 					data[i]['emailCategory'] = $(this).find('input[name=emailCategory]').val();
 					data[i]['emailTemplate'] = $(this).find('select[name=emailTemplate]').val();
 					data[i]['bodyField'] = $(this).find('select[name=bodyField]').val();
+					data[i]['fromField'] = $(this).find('select[name=fromField]').val();
+					data[i]['dateField'] = $(this).find('select[name=dateField]').val();
 					data[i]['imagesField'] = $(this).find('select[name=imagesField]').val();
 				}
 			});
