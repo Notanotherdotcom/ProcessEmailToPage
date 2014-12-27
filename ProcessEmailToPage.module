@@ -25,7 +25,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 
 		return array(
 			'title' => 'Process Email to Page',
-			'version' => 112,
+			'version' => 113,
 			'summary' => 'A module that converts emails and attachments to pages and images.',
 			'author' => 'Peter Burlingham',
 			'href' => '',
@@ -397,14 +397,16 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					$page->template = $category->emailTemplate;
 					$page->parent = $this->pages->get($category->emailCategory);
 					$page->title = $message['headers']['subject'];
-
+					$page->{$category->bodyField} = $body;
 					if($category->nameField != '') $page->{$category->nameField} = $message['headers']['from']['personal'];
 					if($category->emailField != '') $page->{$category->emailField} = $message['headers']['from']['mailbox'] . "@" . $message['headers']['from']['host'];
 					if($category->userField != '') {
 						$uid = wire('users')->get("email=".$message['headers']['from']['mailbox'] . "@" . $message['headers']['from']['host'])->id;
-						$page->{$category->userField} = $uid;
-						$page->created_users_id = $uid;
-						$page->modified_users_id = $uid;
+						if($uid) {
+							$page->{$category->userField} = $uid;
+							$page->created_users_id = $uid;
+							$page->modified_users_id = $uid;
+						}
 					}
 					if($category->dateField != '') $page->{$category->dateField} = $message['received'];
 
@@ -486,8 +488,8 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 
 					}
 
-					if($category->userField != '') {
-					    //modified needs overwriting after dealing with attachments etc
+					if($uid) {
+					    //modified needs overwriting after adding with attachments etc
                         $sql = "UPDATE `pages` SET `modified_users_id` = '".$uid."' WHERE `id` = '".$page->id."';";
                         $update = wire('db')->query($sql);
                     }
