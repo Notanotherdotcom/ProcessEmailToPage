@@ -25,7 +25,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 
 		return array(
 			'title' => 'Process Email to Page',
-			'version' => 111,
+			'version' => 112,
 			'summary' => 'A module that converts emails and attachments to pages and images.',
 			'author' => 'Peter Burlingham',
 			'href' => '',
@@ -367,10 +367,9 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 				$mailbox = new fMailbox($this->emailType, $this->emailHost, $category->emailAddress, $this->emailPassword, $this->emailPort?$this->emailPort:NULL, $this->forceSecure);
 
 				// Fetch the header information from all of the emails found in the inbox
-				$messages = $mailbox->listMessages(1);
+				$messages = $mailbox->listMessages();
 
 				foreach ($messages as $message) {
-					error_log(print_r($message,true));
 					$message = $mailbox->fetchMessage($message['uid']);
 
 					// Remove whitespace and empty tags that creep through from some mail clients (naming no names!)
@@ -401,7 +400,12 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 
 					if($category->nameField != '') $page->{$category->nameField} = $message['headers']['from']['personal'];
 					if($category->emailField != '') $page->{$category->emailField} = $message['headers']['from']['mailbox'] . "@" . $message['headers']['from']['host'];
-					if($category->emailField != '') $page->{$category->userField} = wire('users')->get("email=".$message['headers']['from']['mailbox'] . "@" . $message['headers']['from']['host'])->id;
+					if($category->userField != '') {
+						$uid = wire('users')->get("email=".$message['headers']['from']['mailbox'] . "@" . $message['headers']['from']['host'])->id;
+						$page->{$category->userField} = $uid;
+						$page->created_users_id = $uid;
+						$page->modified_users_id = $uid;
+					}
 					if($category->dateField != '') $page->{$category->dateField} = $message['received'];
 
 					// If we've selected to NOT publish pages by default then hide them
@@ -419,7 +423,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					}
 
 					// Save the page so we can add attachments to it
-					$page->save();
+					$page->save(array('quiet' => true));
 
 					// Iterate through any attachments if we have an images field for this page
 					if (isset($message['attachment']) && $category->imagesField != '') {
@@ -451,11 +455,8 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 
 					// Iterate through any embedded images if we have an images field for this page
 					if (isset($message['related']) && $category->imagesField != '') {
-						//error_log(print_r($message['related'], true));
 						$n=1;
 						foreach ($message['related'] as $attachment) {
-							//error_log(print_r($attachment,true));
-							//wire('log')->message('CID:'.key($message['related']));
 							// We need to make the filename safe before continuing
 							$filename = $this->sanitizer->pageName($message['headers']['subject'], true) . '-' . $n . '.' . substr($attachment['mimetype'], -3);
 							// Write the file directly to the /files/pageid/ folder, then add it to ProcessWire (adds info to the DB)
@@ -485,10 +486,16 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 
 					}
 
+					if($category->userField != '') {
+					    //modified needs overwriting after dealing with attachments etc
+                        $sql = "UPDATE `pages` SET `modified_users_id` = '".$uid."' WHERE `id` = '".$page->id."';";
+                        $update = wire('db')->query($sql);
+                    }
+
 				}
 
 				// Finally, delete any messages from the current mailbox
-				//$mailbox->deleteMessages(array_keys($messages));
+				$mailbox->deleteMessages(array_keys($messages));
 			}
 		}
 	}
