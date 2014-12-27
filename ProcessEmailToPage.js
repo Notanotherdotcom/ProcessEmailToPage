@@ -71,6 +71,7 @@ $(document).ready(function() {
 					data[i]['userField'] = $(this).find('select[name=userField]').val();
 					data[i]['dateField'] = $(this).find('select[name=dateField]').val();
 					data[i]['imagesField'] = $(this).find('select[name=imagesField]').val();
+					data[i]['filesField'] = $(this).find('select[name=filesField]').val();
 				}
 			});
 			if (getObjectSize(data) > 0) {
