@@ -2,7 +2,8 @@
 
 /**
  *
- * Demonstrates the Module interface and how to add hooks.
+ * ProcessWire Email to Page
+ * by Peter Burlingham and Adrian Jones
  *
  * ProcessWire 2.x
  * Copyright (C) 2010 by Ryan Cramer
@@ -27,7 +28,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 			'title' => 'Process Email to Page',
 			'version' => 115,
 			'summary' => 'A module that converts emails and attachments to pages and images.',
-			'author' => 'Peter Burlingham',
+			'author' => 'Peter Burlingham and Adrian Jones',
 			'href' => '',
 			'singular' => true,
 			'autoload' => true

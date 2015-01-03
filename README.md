@@ -12,9 +12,14 @@ For each category, you can now enter an email address, category (page parent) an
 
 Next, you can optionally set up delimiters to split the email's content into different text fields - useful if you want part of your email to be in the body area and some in the sidebar for example. This part is fairly self-explanatory in the config screen.
 
-The module will add attachments to an images field, and optionally embed images into the text body to match the email layout.
+The module will add attachments to an images field, and optionally embed images into the text body to match the email layout. Attachments will be separated into image and non-image types.
 
-There are more things that need to be added - more checks for attachment types and a whitelist - but for now it should be functional and fun to use!
+PW users can be identified by the email address and the created/modified values set to the user. Creation of new pages can be limited to only matched users.
+
+Creation of a new page can trigger a notification email to chosen PW users.
+
+You can optionally set up a host whitelist - this is the actual smtp host that the email comes from - it is not extracted from the email address.
+
 
 *Full details of this module are available here: http://modules.processwire.com/modules/process-email-to-page/*
 
@@ -25,3 +30,10 @@ __Notes:__
 __Updates:__
 
 * v1.0.0 - first release.
+* v1.0.1 - various bug fixes including php notices
+* v1.0.2 - force secure option and fix for plain text vs html emails
+* v1.0.9 - Improved image handling - inline, related, embedded. Can also optionally embed images in the body field. Also, image and body fields are now configurable.
+* v1.1.0 - Added support from date received and from details
+* v1.1.1 - Separate "From" into name, email, and user matching
+* v1.1.2 - Set created and modified user ids for the new page based on a match to a PW user.
+* v1.1.5 -  Added a LOT of new config options and support for mail notification of newly added pages.
