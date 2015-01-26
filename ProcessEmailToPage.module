@@ -26,7 +26,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 
 		return array(
 			'title' => 'Process Email to Page',
-			'version' => 115,
+			'version' => 116,
 			'summary' => 'A module that converts emails and attachments to pages and images.',
 			'author' => 'Peter Burlingham and Adrian Jones',
 			'href' => '',
@@ -503,7 +503,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 					if ($this->autoPublish == 'FALSE') {
 						$page->addStatus(Page::statusUnpublished);
 					}
-					elseif($this->autoPublish == 'TRUE' || $u->isSuperuser()){
+					elseif($this->autoPublish == 'TRUE' || ($u->id && $u->isSuperuser())){
 						//intentionally blank - this results in automatically published page
 					}
 					elseif(!$u->id || ($u->id && $this->autoPublish == 'ALLOWED')){
