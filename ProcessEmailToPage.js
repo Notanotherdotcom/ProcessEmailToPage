@@ -15,6 +15,9 @@ $(document).ready(function() {
 		var newCategory = $('<li class="Inputfield InputfieldWrapper InputfieldColumnWidthFirst" style="margin-top:20px;">').load('?addCategory=' + ($('#EmailCategories ul.Inputfields ul.Inputfields').length), function() {
 			$(newCategory).prepend('<label class="ui-widget ui-widget-header InputfieldItemHeader" for="">&nbsp;<span class="ui-icon ui-icon-trash InputfieldRepeaterTrash deleterow" style="display: block;float:right;cursor:pointer;">Delete</span></label>');
  			$(newCategory).find(".InputfieldAsmSelect select[multiple=multiple]").asmSelect(options);
+			$(".InputfieldPageListSelectData").each(function() {
+				InputfieldPageListSelect.init($(this));
+			});
 		});
 		$('.Inputfields').not('.ui-helper-clearfix').append(newCategory);
 
