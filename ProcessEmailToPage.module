@@ -26,7 +26,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 
 		return array(
 			'title' => 'Process Email to Page',
-			'version' => 117,
+			'version' => 118,
 			'summary' => 'A module that converts emails and attachments to pages and images.',
 			'author' => 'Peter Burlingham and Adrian Jones',
 			'href' => '',
@@ -34,6 +34,12 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 			'autoload' => true
 			);
 	}
+
+    /**
+     * Data as used by the get/set functions
+     *
+     */
+    protected static $fM = array();
 
 	/**
 	 * Default configuration for module
