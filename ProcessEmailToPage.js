@@ -66,6 +66,7 @@ $(document).ready(function() {
 				if ($(this).find('input[name=emailAddress]').val().length > 0 && $(this).find('input[name=emailCategory]').val() > 0 && $(this).find('select[name=emailTemplate]').val() > 0) {
 					data[i] = {};
 					data[i]['emailAddress'] = $(this).find('input[name=emailAddress]').val();
+					data[i]['notifyUsersCategory'] = $(this).find('select[id=Inputfield_notifyUsersCategory]').val();
 					data[i]['emailCategory'] = $(this).find('input[name=emailCategory]').val();
 					data[i]['emailTemplate'] = $(this).find('select[name=emailTemplate]').val();
 					data[i]['bodyField'] = $(this).find('select[name=bodyField]').val();
