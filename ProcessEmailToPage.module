@@ -5,7 +5,7 @@
  * ProcessWire Email to Page
  * by Peter Burlingham and Adrian Jones
  *
- * ProcessWire 2.x
+ * ProcessWire 3.x
  * Copyright (C) 2010 by Ryan Cramer
  * Licensed under GNU/GPL v2, see LICENSE.TXT
  *
@@ -26,7 +26,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 
 		return array(
 			'title' => 'Process Email to Page',
-			'version' => 121,
+			'version' => '1.2.2',
 			'summary' => 'A module that converts emails and attachments to pages and images.',
 			'author' => 'Peter Burlingham and Adrian Jones',
 			'href' => '',
@@ -382,6 +382,9 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 	 * Initialize the module
 	 */
 	public function init() {
+	}
+
+	public function ready() {
 
 		// Check for AJAX request and process as appropriate
 		if($this->config->ajax) {
@@ -542,7 +545,6 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 							}
 						}
 					}
-
 
 					// Find delimiters and split on them (made it difficult for myself by not having ==opening== and ==/closing== tags but hey!)
 					foreach ($this->delimiterField as $delimiter) {

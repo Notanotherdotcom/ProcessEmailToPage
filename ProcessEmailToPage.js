@@ -1,9 +1,9 @@
 $(document).ready(function() {
 	// Add an "Add category" button to the Email Categories container
-	$('#EmailCategories').after('<br /><button class="ui-button ui-state-default" id="addCategory" style="display: block; clear: left;">Add another category</button><br />');
+	$('#EmailCategories').after('<p><br /><button class="ui-button ui-state-default" id="addCategory" style="display: block; clear: left;">Add another category</button><br /></p>');
 
 	$('#EmailCategories .InputfieldWrapper').each(function() {
-		$(this).prepend('<label style="cursor:move;" class="ui-widget ui-widget-header InputfieldItemHeader" for="">&nbsp;<span class="ui-icon ui-icon-trash InputfieldRepeaterTrash deleterow" style="display: block;float:right;cursor:pointer;">Delete</span></label>');
+        $(this).prepend('<label style="cursor:move;" class="etp-header InputfieldHeader" for="">&nbsp;<span class="ui-icon ui-icon-trash InputfieldRepeaterTrash deleterow" style="display: block;float:right;cursor:pointer;">Delete</span><span class="ui-icon ui-icon-arrowthick-2-n-s InputfieldRepeaterDrag"></span></label>');
 		$(this).css("margin-top", "20px");
 	});
 
@@ -13,7 +13,7 @@ $(document).ready(function() {
 		$(this).toggleClass('ui-state-active');
 		var options = { sortable: false };
 		var newCategory = $('<li class="Inputfield InputfieldWrapper InputfieldColumnWidthFirst" style="margin-top:20px;">').load('?addCategory=' + ($('#EmailCategories ul.Inputfields ul.Inputfields').length), function() {
-			$(newCategory).prepend('<label class="ui-widget ui-widget-header InputfieldItemHeader" for="">&nbsp;<span class="ui-icon ui-icon-trash InputfieldRepeaterTrash deleterow" style="display: block;float:right;cursor:pointer;">Delete</span></label>');
+			$(newCategory).prepend('<label style="cursor:move;" class="etp-header InputfieldHeader" for="">&nbsp;<span class="ui-icon ui-icon-trash InputfieldRepeaterTrash deleterow" style="display: block;float:right;cursor:pointer;">Delete</span><span class="ui-icon ui-icon-arrowthick-2-n-s InputfieldRepeaterDrag"></span></label>');
  			$(newCategory).find(".InputfieldAsmSelect select[multiple=multiple]").asmSelect(options);
 			$(".InputfieldPageListSelectData").each(function() {
 				InputfieldPageListSelect.init($(this));
