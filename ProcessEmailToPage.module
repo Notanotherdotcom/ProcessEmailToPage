@@ -26,7 +26,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 
         return array(
             'title' => 'Process Email to Page',
-            'version' => '1.2.4',
+            'version' => '1.3.0',
             'summary' => 'A module that converts emails and attachments to pages and images.',
             'author' => 'Peter Burlingham and Adrian Jones',
             'href' => '',
@@ -523,7 +523,23 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
                     $page->setOutputFormatting(false);
                     $page->template = $category->emailTemplate;
                     $page->parent = $this->pages->get($category->emailCategory);
-                    $page->title = $message['headers']['subject'];
+
+                    if(strpos($message['headers']['subject'], '==#') !== false) {
+                        foreach(wire('languages') as $language) {
+                            $languagecontent = explode('==#' . $language->name . '==', $message['headers']['subject']);
+                            if(isset($languagecontent[1])) {
+                                $languagecontent = explode('==', $languagecontent[1]);
+                                $languagecontent = $languagecontent[0];
+                                $page->setLanguageValue($language->name, 'title', $languagecontent);
+                            }
+                        }
+                        $arr = explode("==", $message['headers']['subject'], 2);
+                        $page->title = $arr[0];
+                    }
+                    else {
+                        $page->title = $message['headers']['subject'];
+                    }
+
                     $page->{$category->bodyField} = $body;
 
                     if($category->nameField != '') $page->{$category->nameField} = $message['headers']['from']['personal'];
@@ -567,8 +583,33 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
                         $delimiter = wire('fields')->get($delimiter);
                         $delimitercontent = explode('==' . $delimiter->name . '==', $message_body);
                         $delimitercontent = explode('==', $delimitercontent[1]);
-                        $delimitercontent = $delimitercontent[0];
+                        $delimitercontent = preg_replace('/^(?:<br\s*\/?>\s*)+/', '', $delimitercontent[0]);
+
+                        // Find language delimiters in delimiter field sections
+                        if(strpos($message_body, '=='.$delimiter->name.'==#') !== false) {
+                            foreach(wire('languages') as $language) {
+                                $languagecontent = explode('=='.$delimiter->name.'==#' . $language->name . '==', $message_body);
+                                if(isset($languagecontent[1])) {
+                                    $languagecontent = explode('==', $languagecontent[1]);
+                                    $languagecontent = preg_replace('/^(?:<br\s*\/?>\s*)+/', '', $languagecontent[0]);
+                                    $page->setLanguageValue($language->name, $delimiter->name, $languagecontent);
+                                }
+                            }
+                        }
+
                         $page->{$delimiter->name} = $delimitercontent;
+                    }
+
+                    // Find language delimiters in main body
+                    if(strpos($message_body, '==#') !== false) {
+                        foreach(wire('languages') as $language) {
+                            $languagecontent = explode('==#' . $language->name . '==', $message_body);
+                            if(isset($languagecontent[1])) {
+                                $languagecontent = explode('==', $languagecontent[1]);
+                                $languagecontent = preg_replace('/^(?:<br\s*\/?>\s*)+/', '', $languagecontent[0]);
+                                $page->setLanguageValue($language->name, 'body', $languagecontent);
+                            }
+                        }
                     }
 
                     // Save the page so we can add attachments to it
