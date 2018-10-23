@@ -26,7 +26,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
 
         return array(
             'title' => 'Process Email to Page',
-            'version' => '1.3.0',
+            'version' => '1.3.1',
             'summary' => 'A module that converts emails and attachments to pages and images.',
             'author' => 'Peter Burlingham and Adrian Jones',
             'href' => '',
@@ -524,7 +524,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
                     $page->template = $category->emailTemplate;
                     $page->parent = $this->pages->get($category->emailCategory);
 
-                    if(strpos($message['headers']['subject'], '==#') !== false) {
+                    if(wire('languages') && strpos($message['headers']['subject'], '==#') !== false) {
                         foreach(wire('languages') as $language) {
                             $languagecontent = explode('==#' . $language->name . '==', $message['headers']['subject']);
                             if(isset($languagecontent[1])) {
@@ -571,7 +571,7 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
                     }
 
                     // Determine whether or not to activate page in all languages
-                    if($this->autoActivateLanguages === 1) {
+                    if(wire('languages') && $this->autoActivateLanguages === 1) {
                         foreach(wire('languages') as $lang) {
                             if($lang->isDefault()) continue;
                             $page->set("status$lang", 1);
@@ -582,26 +582,28 @@ class ProcessEmailToPage extends Process implements Module, ConfigurableModule {
                     foreach($this->delimiterField as $delimiter) {
                         $delimiter = wire('fields')->get($delimiter);
                         $delimitercontent = explode('==' . $delimiter->name . '==', $message_body);
-                        $delimitercontent = explode('==', $delimitercontent[1]);
-                        $delimitercontent = preg_replace('/^(?:<br\s*\/?>\s*)+/', '', $delimitercontent[0]);
+                        if(isset($delimitercontent[1])) {
+                            $delimitercontent = explode('==', $delimitercontent[1]);
+                            $delimitercontent = preg_replace('/^(?:<br\s*\/?>\s*)+/', '', $delimitercontent[0]);
 
-                        // Find language delimiters in delimiter field sections
-                        if(strpos($message_body, '=='.$delimiter->name.'==#') !== false) {
-                            foreach(wire('languages') as $language) {
-                                $languagecontent = explode('=='.$delimiter->name.'==#' . $language->name . '==', $message_body);
-                                if(isset($languagecontent[1])) {
-                                    $languagecontent = explode('==', $languagecontent[1]);
-                                    $languagecontent = preg_replace('/^(?:<br\s*\/?>\s*)+/', '', $languagecontent[0]);
-                                    $page->setLanguageValue($language->name, $delimiter->name, $languagecontent);
+                            // Find language delimiters in delimiter field sections
+                            if(wire('languages') && strpos($message_body, '=='.$delimiter->name.'==#') !== false) {
+                                foreach(wire('languages') as $language) {
+                                    $languagecontent = explode('=='.$delimiter->name.'==#' . $language->name . '==', $message_body);
+                                    if(isset($languagecontent[1])) {
+                                        $languagecontent = explode('==', $languagecontent[1]);
+                                        $languagecontent = preg_replace('/^(?:<br\s*\/?>\s*)+/', '', $languagecontent[0]);
+                                        $page->setLanguageValue($language->name, $delimiter->name, $languagecontent);
+                                    }
                                 }
                             }
-                        }
 
-                        $page->{$delimiter->name} = $delimitercontent;
+                            $page->{$delimiter->name} = $delimitercontent;
+                        }
                     }
 
                     // Find language delimiters in main body
-                    if(strpos($message_body, '==#') !== false) {
+                    if(wire('languages') && strpos($message_body, '==#') !== false) {
                         foreach(wire('languages') as $language) {
                             $languagecontent = explode('==#' . $language->name . '==', $message_body);
                             if(isset($languagecontent[1])) {
